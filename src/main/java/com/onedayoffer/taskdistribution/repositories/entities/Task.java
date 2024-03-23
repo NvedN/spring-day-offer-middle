@@ -3,9 +3,14 @@ package com.onedayoffer.taskdistribution.repositories.entities;
 import com.onedayoffer.taskdistribution.DTO.TaskStatus;
 import com.onedayoffer.taskdistribution.DTO.TaskType;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import static jakarta.persistence.GenerationType.IDENTITY;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "task")
 public class Task {
     @Id
@@ -22,6 +27,7 @@ public class Task {
     @Enumerated(EnumType.STRING)
     private TaskType taskType;
 
+    @Setter
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
@@ -32,23 +38,5 @@ public class Task {
     @Column
     private Integer leadTime;
 
-    public Employee getEmployee() {
-        return employee;
-    }
 
-    public void setEmployee(Employee employee) {
-        this.employee = employee;
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public TaskStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(TaskStatus status) {
-        this.status = status;
-    }
 }
