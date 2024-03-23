@@ -84,7 +84,7 @@ public class EmployeeService {
     }
 
     @Transactional
-    public void changeTaskStatus(Integer employeeId, Integer taskId, @Nullable TaskStatus status) {
+    public void changeTaskStatus(Integer employeeId, Integer taskId, TaskStatus status) {
         Optional<Task> optionalTask = taskRepository.findByIdAndEmployeeId(taskId, employeeId);
         Task task =
                 optionalTask.orElseThrow(
