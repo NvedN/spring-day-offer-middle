@@ -25,96 +25,98 @@ import java.util.Optional;
 @AllArgsConstructor
 public class EmployeeService {
 
-  private final EmployeeRepository employeeRepository;
-  private final TaskRepository taskRepository;
-  private final ModelMapper modelMapper;
+    private final EmployeeRepository employeeRepository;
+    private final TaskRepository taskRepository;
+    private final ModelMapper modelMapper;
 
-  public List<EmployeeDTO> getEmployees(@Nullable String sortDirection) {
-    List<Employee> employees = employeeRepository.findAll(createSortObject(sortDirection));
-    if (employees.isEmpty()) {
-      log.warn("Employee list is empty");
+    public List<EmployeeDTO> getEmployees(@Nullable String sortDirection) {
+        List<Employee> employees = employeeRepository.findAll(createSortObject(sortDirection));
+        if (employees.isEmpty()) {
+            log.warn("Employee list is empty");
+        }
+        return employeeToDtoList(employees);
     }
-    return employeeToDtoList(employees);
-  }
 
-  public List<EmployeeDTO> employeeToDtoList(List<Employee> entity) {
-    Type listType = new TypeToken<List<EmployeeDTO>>() {}.getType();
-    return modelMapper.map(entity, listType);
-  }
-
-  public List<TaskDTO> taskToDtoList(List<Task> entity) {
-    Type listType = new TypeToken<List<TaskDTO>>() {}.getType();
-    return modelMapper.map(entity, listType);
-  }
-
-  private Sort createSortObject(@Nullable String sortDirection) {
-    Sort.Direction direction = Sort.Direction.ASC;
-    if (sortDirection != null) {
-      if (sortDirection.equalsIgnoreCase("DESC")) {
-        direction = Sort.Direction.DESC;
-      } else if (!sortDirection.equalsIgnoreCase("ASC")) {
-        log.warn("Invalid sort direction: {}", sortDirection);
-      }
+    public List<EmployeeDTO> employeeToDtoList(List<Employee> entity) {
+        Type listType = new TypeToken<List<EmployeeDTO>>() {
+        }.getType();
+        return modelMapper.map(entity, listType);
     }
-    return Sort.by(direction, "fio");
-  }
 
-  @Transactional
-  public EmployeeDTO getOneEmployee(Integer id) {
-
-    Employee employee =
-        employeeRepository
-            .findById(id)
-            .orElseThrow(
-                () -> {
-                  log.info("Employee with id {} does not exist", id);
-                  return new RuntimeException("Employee not found");
-                });
-    return modelMapper.map(employee, EmployeeDTO.class);
-  }
-
-  public List<TaskDTO> getTasksByEmployeeId(Integer id) {
-    List<Task> employeeTasks = taskRepository.findAllByEmployeeId(id);
-    if (employeeTasks.isEmpty()) {
-      log.warn("Employee tasks list is empty");
+    public List<TaskDTO> taskToDtoList(List<Task> entity) {
+        Type listType = new TypeToken<List<TaskDTO>>() {
+        }.getType();
+        return modelMapper.map(entity, listType);
     }
-    return taskToDtoList(employeeTasks);
-  }
 
-  @Transactional
-  public void changeTaskStatus(Integer employeeId, Integer taskId, @Nullable TaskStatus status) {
-    Optional<Task> optionalTask = taskRepository.findByIdAndEmployeeId(taskId, employeeId);
-    Task task =
-        optionalTask.orElseThrow(
-            () -> {
-              log.warn(
-                  "Task with ID {} for employee with ID {} does not exist", taskId, employeeId);
-              return new RuntimeException("Task not found");
-            });
-    task.setStatus(status);
-    taskRepository.saveAndFlush(task);
-    log.info(
-        "Task with ID {} for employee with ID {} has been updated to status: {}",
-        taskId,
-        employeeId,
-        status);
-  }
+    private Sort createSortObject(@Nullable String sortDirection) {
+        Sort.Direction direction = Sort.Direction.ASC;
+        if (sortDirection != null) {
+            if (sortDirection.equalsIgnoreCase("DESC")) {
+                direction = Sort.Direction.DESC;
+            } else if (!sortDirection.equalsIgnoreCase("ASC")) {
+                log.warn("Invalid sort direction: {}", sortDirection);
+            }
+        }
+        return Sort.by(direction, "fio");
+    }
 
-  @Transactional
-  public void postNewTask(Integer employeeId, TaskDTO newTaskDTO) {
-    Employee employee =
-        employeeRepository
-            .findById(employeeId)
-            .orElseThrow(
-                () -> {
-                  log.warn("Employee with given id: {} doesn't exist", employeeId);
-                  return new RuntimeException("Employee not found");
-                });
+    @Transactional
+    public EmployeeDTO getOneEmployee(Integer id) {
 
-    Task task = modelMapper.map(newTaskDTO, Task.class);
-    employee.addTask(task);
-    taskRepository.save(task);
+        Employee employee =
+                employeeRepository
+                        .findById(id)
+                        .orElseThrow(
+                                () -> {
+                                    log.info("Employee with id {} does not exist", id);
+                                    return new RuntimeException("Employee not found");
+                                });
+        return modelMapper.map(employee, EmployeeDTO.class);
+    }
 
-    log.info("New task created for employee with ID {}: {}", employeeId, task);
-  }
+    public List<TaskDTO> getTasksByEmployeeId(Integer id) {
+        List<Task> employeeTasks = taskRepository.findAllByEmployeeId(id);
+        if (employeeTasks.isEmpty()) {
+            log.warn("Employee tasks list is empty");
+        }
+        return taskToDtoList(employeeTasks);
+    }
+
+    @Transactional
+    public void changeTaskStatus(Integer employeeId, Integer taskId, @Nullable TaskStatus status) {
+        Optional<Task> optionalTask = taskRepository.findByIdAndEmployeeId(taskId, employeeId);
+        Task task =
+                optionalTask.orElseThrow(
+                        () -> {
+                            log.warn(
+                                    "Task with ID {} for employee with ID {} does not exist", taskId, employeeId);
+                            return new RuntimeException("Task not found");
+                        });
+        task.setStatus(status);
+        taskRepository.saveAndFlush(task);
+        log.info(
+                "Task with ID {} for employee with ID {} has been updated to status: {}",
+                taskId,
+                employeeId,
+                status);
+    }
+
+    @Transactional
+    public void postNewTask(Integer employeeId, TaskDTO newTaskDTO) {
+        Employee employee =
+                employeeRepository
+                        .findById(employeeId)
+                        .orElseThrow(
+                                () -> {
+                                    log.warn("Employee with given id: {} doesn't exist", employeeId);
+                                    return new RuntimeException("Employee not found");
+                                });
+
+        Task task = modelMapper.map(newTaskDTO, Task.class);
+        employee.addTask(task);
+        taskRepository.save(task);
+
+        log.info("New task created for employee with ID {}: {}", employeeId, task);
+    }
 }
